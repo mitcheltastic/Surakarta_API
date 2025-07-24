@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-// --- Import Routers ---
+// --- Import Routers using direct relative paths ---
 const authRoutes = require('./src/api/auth/auth.routes');
 const postRoutes = require('./src/api/news/news.routes');
 const galleryRoutes = require('./src/api/gallery/gallery.routes');

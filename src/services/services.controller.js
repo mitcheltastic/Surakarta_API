@@ -1,5 +1,5 @@
 // --- File: /src/api/services/services.controller.js ---
-const servicesPrisma = require('../../services/prisma');
+const servicesPrisma = require('../services/prisma');
 
 const servicesController = {
   // --- Guestbook ---

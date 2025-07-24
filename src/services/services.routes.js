@@ -1,7 +1,7 @@
 // --- File: /src/api/services/services.routes.js ---
 const servicesRouter = require('express').Router();
 const servicesController = require('./services.controller');
-const servicesAuthMiddleware = require('../../middlewares/auth.middleware');
+const servicesAuthMiddleware = require('../../src/middlewares/auth.middleware');
 
 // Guestbook
 servicesRouter.get('/guestbook', servicesController.getGuestBookEntries);
