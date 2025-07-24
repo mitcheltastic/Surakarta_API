@@ -1,15 +1,16 @@
-const router = require('express').Router();
+// --- File: /src/api/profile/profile.routes.js ---
+const profileRouter = require('express').Router();
 const profileController = require('./profile.controller');
-const authenticateToken = require('../../middlewares/auth.middleware');
+const profileAuthMiddleware = require('../../middlewares/auth.middleware');
 
 // Site Content (History, Demographics, etc.)
-router.get('/content', profileController.getSiteContent);
-router.put('/content', authenticateToken, profileController.updateSiteContent);
+profileRouter.get('/content', profileController.getSiteContent);
+profileRouter.put('/content', profileAuthMiddleware, profileController.updateSiteContent);
 
 // Village Officials
-router.get('/officials', profileController.getOfficials);
-router.post('/officials', authenticateToken, profileController.createOfficial);
-router.put('/officials/:id', authenticateToken, profileController.updateOfficial);
-router.delete('/officials/:id', authenticateToken, profileController.deleteOfficial);
+profileRouter.get('/officials', profileController.getOfficials);
+profileRouter.post('/officials', profileAuthMiddleware, profileController.createOfficial);
+profileRouter.put('/officials/:id', profileAuthMiddleware, profileController.updateOfficial);
+profileRouter.delete('/officials/:id', profileAuthMiddleware, profileController.deleteOfficial);
 
-module.exports = router;
+module.exports = profileRouter;

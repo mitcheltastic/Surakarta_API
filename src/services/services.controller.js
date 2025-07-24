@@ -1,10 +1,11 @@
-const prisma = require('../../services/prisma');
+// --- File: /src/api/services/services.controller.js ---
+const servicesPrisma = require('../../services/prisma');
 
 const servicesController = {
   // --- Guestbook ---
   getGuestBookEntries: async (req, res) => {
       try {
-          const entries = await prisma.guestBookEntry.findMany({ orderBy: { createdAt: 'desc' } });
+          const entries = await servicesPrisma.guestBookEntry.findMany({ orderBy: { createdAt: 'desc' } });
           res.status(200).json(entries);
       } catch (error) {
           res.status(500).json({ message: 'Error fetching guestbook entries', error: error.message });
@@ -13,7 +14,7 @@ const servicesController = {
   createGuestBookEntry: async (req, res) => {
       try {
           const { name, message } = req.body;
-          const newEntry = await prisma.guestBookEntry.create({ data: { name, message } });
+          const newEntry = await servicesPrisma.guestBookEntry.create({ data: { name, message } });
           res.status(201).json(newEntry);
       } catch (error) {
           res.status(500).json({ message: 'Error creating guestbook entry', error: error.message });
@@ -21,7 +22,7 @@ const servicesController = {
   },
   deleteGuestBookEntry: async (req, res) => {
     try {
-        await prisma.guestBookEntry.delete({ where: { id: req.params.id } });
+        await servicesPrisma.guestBookEntry.delete({ where: { id: req.params.id } });
         res.status(200).json({ message: 'Guestbook entry deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting entry', error: error.message });
@@ -31,7 +32,7 @@ const servicesController = {
   // --- Complaints ---
   getComplaints: async (req, res) => {
       try {
-          const complaints = await prisma.complaint.findMany({ orderBy: { createdAt: 'desc' } });
+          const complaints = await servicesPrisma.complaint.findMany({ orderBy: { createdAt: 'desc' } });
           res.status(200).json(complaints);
       } catch (error) {
           res.status(500).json({ message: 'Error fetching complaints', error: error.message });
@@ -40,7 +41,7 @@ const servicesController = {
   createComplaint: async (req, res) => {
       try {
           const { name, contact, message } = req.body;
-          const newComplaint = await prisma.complaint.create({ data: { name, contact, message } });
+          const newComplaint = await servicesPrisma.complaint.create({ data: { name, contact, message } });
           res.status(201).json({ message: 'Complaint submitted successfully', data: newComplaint });
       } catch (error) {
           res.status(500).json({ message: 'Error submitting complaint', error: error.message });
@@ -49,7 +50,7 @@ const servicesController = {
   updateComplaintStatus: async (req, res) => {
       try {
           const { status } = req.body; // PENDING, IN_PROGRESS, RESOLVED, REJECTED
-          const updatedComplaint = await prisma.complaint.update({
+          const updatedComplaint = await servicesPrisma.complaint.update({
               where: { id: req.params.id },
               data: { status }
           });
@@ -62,7 +63,7 @@ const servicesController = {
   // --- Letter Requests ---
   getLetterRequests: async (req, res) => {
       try {
-          const requests = await prisma.letterRequest.findMany({ orderBy: { createdAt: 'desc' } });
+          const requests = await servicesPrisma.letterRequest.findMany({ orderBy: { createdAt: 'desc' } });
           res.status(200).json(requests);
       } catch (error) {
           res.status(500).json({ message: 'Error fetching letter requests', error: error.message });
@@ -71,7 +72,7 @@ const servicesController = {
   createLetterRequest: async (req, res) => {
       try {
           const { requesterName, nik, requestType, details } = req.body;
-          const newRequest = await prisma.letterRequest.create({ data: { requesterName, nik, requestType, details } });
+          const newRequest = await servicesPrisma.letterRequest.create({ data: { requesterName, nik, requestType, details } });
           res.status(201).json({ message: 'Letter request submitted successfully', data: newRequest });
       } catch (error) {
           res.status(500).json({ message: 'Error submitting letter request', error: error.message });
@@ -80,7 +81,7 @@ const servicesController = {
   updateLetterRequestStatus: async (req, res) => {
       try {
           const { status } = req.body;
-          const updatedRequest = await prisma.letterRequest.update({
+          const updatedRequest = await servicesPrisma.letterRequest.update({
               where: { id: req.params.id },
               data: { status }
           });

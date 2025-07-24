@@ -1,3 +1,4 @@
+// --- File: /src/api/news/news.routes.js ---
 const newsRouter = require('express').Router();
 const postController = require('./news.controller');
 const authenticateToken = require('../../middlewares/auth.middleware');

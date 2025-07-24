@@ -1,20 +1,21 @@
-const router = require('express').Router();
+// --- File: /src/api/services/services.routes.js ---
+const servicesRouter = require('express').Router();
 const servicesController = require('./services.controller');
-const authenticateToken = require('../../middlewares/auth.middleware');
+const servicesAuthMiddleware = require('../../middlewares/auth.middleware');
 
 // Guestbook
-router.get('/guestbook', servicesController.getGuestBookEntries);
-router.post('/guestbook', servicesController.createGuestBookEntry);
-router.delete('/guestbook/:id', authenticateToken, servicesController.deleteGuestBookEntry);
+servicesRouter.get('/guestbook', servicesController.getGuestBookEntries);
+servicesRouter.post('/guestbook', servicesController.createGuestBookEntry);
+servicesRouter.delete('/guestbook/:id', servicesAuthMiddleware, servicesController.deleteGuestBookEntry);
 
 // Complaints
-router.get('/complaints', authenticateToken, servicesController.getComplaints);
-router.post('/complaints', servicesController.createComplaint);
-router.put('/complaints/:id', authenticateToken, servicesController.updateComplaintStatus);
+servicesRouter.get('/complaints', servicesAuthMiddleware, servicesController.getComplaints);
+servicesRouter.post('/complaints', servicesController.createComplaint);
+servicesRouter.put('/complaints/:id', servicesAuthMiddleware, servicesController.updateComplaintStatus);
 
 // Letter Requests
-router.get('/letters', authenticateToken, servicesController.getLetterRequests);
-router.post('/letters', servicesController.createLetterRequest);
-router.put('/letters/:id', authenticateToken, servicesController.updateLetterRequestStatus);
+servicesRouter.get('/letters', servicesAuthMiddleware, servicesController.getLetterRequests);
+servicesRouter.post('/letters', servicesController.createLetterRequest);
+servicesRouter.put('/letters/:id', servicesAuthMiddleware, servicesController.updateLetterRequestStatus);
 
-module.exports = router;
+module.exports = servicesRouter;

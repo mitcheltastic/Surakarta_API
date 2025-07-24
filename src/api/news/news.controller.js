@@ -1,3 +1,4 @@
+// --- File: /src/api/news/news.controller.js ---
 const newsPrisma = require('../../services/prisma');
 
 const newsPostController = {

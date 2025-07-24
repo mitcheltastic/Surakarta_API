@@ -1,9 +1,10 @@
-const router = require('express').Router();
+// --- File: /src/api/gallery/gallery.routes.js ---
+const galleryRouter = require('express').Router();
 const galleryController = require('./gallery.controller');
-const authenticateToken = require('../../middlewares/auth.middleware');
+const galleryAuthMiddleware = require('../../middlewares/auth.middleware');
 
-router.get('/', galleryController.getAllGalleryItems);
-router.post('/', authenticateToken, galleryController.createGalleryItem);
-router.delete('/:id', authenticateToken, galleryController.deleteGalleryItem);
+galleryRouter.get('/', galleryController.getAllGalleryItems);
+galleryRouter.post('/', galleryAuthMiddleware, galleryController.createGalleryItem);
+galleryRouter.delete('/:id', galleryAuthMiddleware, galleryController.deleteGalleryItem);
 
-module.exports = router;
+module.exports = galleryRouter;

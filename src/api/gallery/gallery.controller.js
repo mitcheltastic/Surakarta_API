@@ -1,11 +1,12 @@
-const prisma = require('../../services/prisma');
+// --- File: /src/api/gallery/gallery.controller.js ---
+const galleryPrisma = require('../../services/prisma');
 
 const galleryController = {
   getAllGalleryItems: async (req, res) => {
     try {
       const { type } = req.query; // Filter by IMAGE or VIDEO
       const filter = type ? { where: { type } } : {};
-      const items = await prisma.galleryItem.findMany({
+      const items = await galleryPrisma.galleryItem.findMany({
         ...filter,
         orderBy: { createdAt: 'desc' }
       });
@@ -21,7 +22,7 @@ const galleryController = {
       if (!url || !type) {
         return res.status(400).json({ message: 'URL and type are required' });
       }
-      const newItem = await prisma.galleryItem.create({
+      const newItem = await galleryPrisma.galleryItem.create({
         data: { title, description, url, type }
       });
       res.status(201).json(newItem);
@@ -33,7 +34,7 @@ const galleryController = {
   deleteGalleryItem: async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.galleryItem.delete({ where: { id } });
+        await galleryPrisma.galleryItem.delete({ where: { id } });
         res.status(200).json({ message: 'Gallery item deleted' });
     } catch (error) {
         if (error.code === 'P2025') {
