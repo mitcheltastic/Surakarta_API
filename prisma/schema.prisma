@@ -1,15 +1,113 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// Model for Admin Users
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String // Store a hashed password, not plain text!
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model for Village Officials
+model VillageOfficial {
+  id        String   @id @default(cuid())
+  name      String
+  position  String
+  imageUrl  String?
+  order     Int      @default(0) // For ordering officials on the page
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model for News, Announcements, and Agendas
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  imageUrl  String?
+  type      PostType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PostType {
+  NEWS
+  ANNOUNCEMENT
+  AGENDA
+}
+
+// Model for Gallery items (Photos and Videos)
+model GalleryItem {
+  id          String      @id @default(cuid())
+  title       String?
+  description String?
+  url         String // URL to the image or video embed link
+  type        GalleryType
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum GalleryType {
+  IMAGE
+  VIDEO
+}
+
+// Model for Guest Book entries
+model GuestBookEntry {
+  id        String   @id @default(cuid())
+  name      String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// Model for Complaints from citizens
+model Complaint {
+  id        String         @id @default(cuid())
+  name      String
+  contact   String? // e.g., phone number or email
+  message   String
+  status    StatusType     @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// Model for Letter Requests
+model LetterRequest {
+  id          String     @id @default(cuid())
+  requesterName String
+  nik         String // National Identity Number
+  requestType String // e.g., "Surat Keterangan Usaha"
+  details     Json?      // For any extra form fields
+  status      StatusType @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum StatusType {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+// A single-row model for storing general site content that doesn't change often
+// e.g., Village History, Contact Info.
+model SiteContent {
+  id            String  @id @default("main_content") // Use a fixed ID to ensure only one row
+  historyText   String? @db.Text
+  demographics  Json?   // Store demographic data as a JSON object
+  contactInfo   Json?   // Store contact info (phone, email, social media) as JSON
+  googleMapsUrl String?
+  updatedAt     DateTime @updatedAt
 }
