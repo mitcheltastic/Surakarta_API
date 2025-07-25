@@ -1,10 +1,13 @@
-// --- File: /src/api/gallery/gallery.routes.js ---
-const galleryRouter = require('express').Router();
+// /src/api/gallery/gallery.routes.js
+
+const router = require('express').Router();
 const galleryController = require('./gallery.controller');
-const galleryAuthMiddleware = require('../../middlewares/auth.middleware');
+const authenticateToken = require('../../middlewares/auth.middleware');
+const upload = require('../../middlewares/upload.middleware');
 
-galleryRouter.get('/', galleryController.getAllGalleryItems);
-galleryRouter.post('/', galleryAuthMiddleware, galleryController.createGalleryItem);
-galleryRouter.delete('/:id', galleryAuthMiddleware, galleryController.deleteGalleryItem);
+router.get('/', galleryController.getAllGalleryItems);
+// For gallery, we'll use the field name 'media'
+router.post('/', authenticateToken, upload.single('media'), galleryController.createGalleryItem);
+router.delete('/:id', authenticateToken, galleryController.deleteGalleryItem);
 
-module.exports = galleryRouter;
+module.exports = router;

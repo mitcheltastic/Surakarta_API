@@ -1,16 +1,18 @@
-// --- File: /src/api/profile/profile.routes.js ---
-const profileRouter = require('express').Router();
+// /src/api/profile/profile.routes.js
+
+const router = require('express').Router();
 const profileController = require('./profile.controller');
-const profileAuthMiddleware = require('../../middlewares/auth.middleware');
+const authenticateToken = require('../../middlewares/auth.middleware');
+const upload = require('../../middlewares/upload.middleware');
 
-// Site Content (History, Demographics, etc.)
-profileRouter.get('/content', profileController.getSiteContent);
-profileRouter.put('/content', profileAuthMiddleware, profileController.updateSiteContent);
+// Site Content routes are unchanged
+router.get('/content', profileController.getSiteContent);
+router.put('/content', authenticateToken, profileController.updateSiteContent);
 
-// Village Officials
-profileRouter.get('/officials', profileController.getOfficials);
-profileRouter.post('/officials', profileAuthMiddleware, profileController.createOfficial);
-profileRouter.put('/officials/:id', profileAuthMiddleware, profileController.updateOfficial);
-profileRouter.delete('/officials/:id', profileAuthMiddleware, profileController.deleteOfficial);
+// Village Officials routes now handle file uploads with field name 'photo'
+router.get('/officials', profileController.getOfficials);
+router.post('/officials', authenticateToken, upload.single('photo'), profileController.createOfficial);
+router.put('/officials/:id', authenticateToken, upload.single('photo'), profileController.updateOfficial);
+router.delete('/officials/:id', authenticateToken, profileController.deleteOfficial);
 
-module.exports = profileRouter;
+module.exports = router;

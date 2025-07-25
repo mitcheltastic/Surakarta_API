@@ -1,59 +1,47 @@
-// --- File: /src/api/news/news.controller.js ---
-const newsPrisma = require('../../services/prisma');
+// /src/api/news/news.controller.js
 
-const newsPostController = {
-  // GET /api/posts
-  // Get all posts, with optional filtering by type
+const prisma = require('../../services/prisma');
+const imagekit = require('../../services/imagekit');
+
+const postController = {
   getAllPosts: async (req, res) => {
     try {
-      const { type } = req.query; // e.g., /api/posts?type=NEWS
+      const { type } = req.query;
       const filter = type ? { where: { type } } : {};
-      
-      const posts = await newsPrisma.post.findMany({
-        ...filter,
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      const posts = await prisma.post.findMany({ ...filter, orderBy: { createdAt: 'desc' } });
       res.status(200).json(posts);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching posts', error: error.message });
     }
   },
 
-  // GET /api/posts/:id
   getPostById: async (req, res) => {
     try {
-      const { id } = req.params;
-      const post = await newsPrisma.post.findUnique({
-        where: { id },
-      });
-
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
+      const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+      if (!post) return res.status(404).json({ message: 'Post not found' });
       res.status(200).json(post);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching post', error: error.message });
     }
   },
 
-  // POST /api/posts
   createPost: async (req, res) => {
     try {
-      const { title, content, imageUrl, type } = req.body;
+      const { title, content, type } = req.body;
+      let imageUrl = null;
 
-      if (!title || !content || !type) {
-        return res.status(400).json({ message: 'Title, content, and type are required' });
+      // Check if a file was uploaded
+      if (req.file) {
+        const uploadResponse = await imagekit.upload({
+          file: req.file.buffer,
+          fileName: `post_${Date.now()}_${req.file.originalname}`,
+          folder: '/village_posts/' // Optional: folder in ImageKit
+        });
+        imageUrl = uploadResponse.url;
       }
 
-      const newPost = await newsPrisma.post.create({
-        data: {
-          title,
-          content,
-          imageUrl,
-          type, // Should be 'NEWS', 'ANNOUNCEMENT', or 'AGENDA'
-        },
+      const newPost = await prisma.post.create({
+        data: { title, content, type, imageUrl },
       });
       res.status(201).json({ message: 'Post created successfully', data: newPost });
     } catch (error) {
@@ -61,43 +49,41 @@ const newsPostController = {
     }
   },
 
-  // PUT /api/posts/:id
   updatePost: async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, content, imageUrl, type } = req.body;
+      const { title, content, type } = req.body;
+      const dataToUpdate = { title, content, type };
 
-      const updatedPost = await newsPrisma.post.update({
+      // Check if a new file was uploaded to replace the old one
+      if (req.file) {
+        const uploadResponse = await imagekit.upload({
+          file: req.file.buffer,
+          fileName: `post_${Date.now()}_${req.file.originalname}`,
+          folder: '/village_posts/'
+        });
+        dataToUpdate.imageUrl = uploadResponse.url;
+      }
+
+      const updatedPost = await prisma.post.update({
         where: { id },
-        data: { title, content, imageUrl, type },
+        data: dataToUpdate,
       });
       res.status(200).json({ message: 'Post updated successfully', data: updatedPost });
     } catch (error) {
-      if (error.code === 'P2025') {
-        return res.status(404).json({ message: 'Post not found' });
-      }
       res.status(500).json({ message: 'Error updating post', error: error.message });
     }
   },
-
-  // DELETE /api/posts/:id
+  
   deletePost: async (req, res) => {
-    try {
-      const { id } = req.params;
-      await newsPrisma.post.delete({
-        where: { id },
-      });
+     try {
+      await prisma.post.delete({ where: { id: req.params.id } });
       res.status(200).json({ message: 'Post deleted successfully' });
     } catch (error) {
-      if (error.code === 'P2025') {
-        return res.status(404).json({ message: 'Post not found' });
-      }
+      if (error.code === 'P2025') return res.status(404).json({ message: 'Post not found' });
       res.status(500).json({ message: 'Error deleting post', error: error.message });
     }
   },
 };
 
-// To avoid naming conflicts, we export the controller with a unique name
-module.exports = {
-    ...newsPostController
-};
+module.exports = postController;
