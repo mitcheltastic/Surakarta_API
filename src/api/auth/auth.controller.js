@@ -1,29 +1,34 @@
 const prisma = require('../../services/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto'); // Built-in Node.js module for generating random tokens
+const sendEmail = require('../../services/mailer'); // Import the mailer
 
 const authController = {
+  // --- UPDATED: Register now requires email ---
   register: async (req, res) => {
-    // ... (This function remains the same)
     try {
-      const { username, password } = req.body;
-      if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required' });
+      const { username, email, password } = req.body;
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: 'Username, email, and password are required' });
       }
       const hashedPassword = await bcrypt.hash(password, 10);
       const admin = await prisma.admin.create({
-        data: { username, password: hashedPassword },
+        data: {
+            username: username,
+            email: email,
+            password: hashedPassword
+        },
       });
-      res.status(201).json({ message: 'Admin registered successfully', data: { id: admin.id, username: admin.username } });
+      res.status(201).json({ message: 'Admin registered successfully', data: { id: admin.id, username: admin.username, email: admin.email } });
     } catch (error) {
        if (error.code === 'P2002') {
-        return res.status(409).json({ message: 'Username already exists' });
+        return res.status(409).json({ message: 'Username or email already exists' });
       }
       res.status(500).json({ message: 'Error registering admin', error: error.message });
     }
   },
 
+  // --- Login and getMe are now filled in ---
   login: async (req, res) => {
     try {
       const { username, password } = req.body;
@@ -33,9 +38,8 @@ const authController = {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      // --- UPDATED EXPIRATION TIME ---
       const token = jwt.sign({ id: admin.id, username: admin.username }, process.env.JWT_SECRET, {
-        expiresIn: '7d', // Token now expires in 7 days
+        expiresIn: '7d',
       });
 
       res.json({ message: 'Login successful', token });
@@ -43,88 +47,89 @@ const authController = {
       res.status(500).json({ message: 'Error logging in', error: error.message });
     }
   },
-  
+
   getMe: async (req, res) => {
-    // This function acts as the "Who Am I" endpoint.
-    // If the token is valid, it returns the user's data.
-    // The frontend can call this on page load to check for a valid session.
     res.status(200).json(req.user);
   },
 
-  // --- NEW FUNCTION: Forgot Password ---
+  // --- NEW: Step 1 of Password Reset ---
+  // RENAMED from sendResetCode to forgotPassword to match auth.routes.js
   forgotPassword: async (req, res) => {
     try {
-        const { username } = req.body;
-        const admin = await prisma.admin.findUnique({ where: { username } });
+        const { email } = req.body;
 
-        if (!admin) {
-            // Send a generic success message to prevent username enumeration
-            return res.status(200).json({ message: 'If a user with that username exists, a password reset link has been sent.' });
+        // Added validation for email presence
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required for password reset.' });
         }
 
-        // 1. Generate a random, unhashed token
-        const resetToken = crypto.randomBytes(32).toString('hex');
+        const admin = await prisma.admin.findUnique({ where: { email } });
 
-        // 2. Hash the token before saving it to the database for security
-        const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        if (!admin) {
+            // Security: Don't reveal if an email is registered or not.
+            return res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
+        }
 
-        // 3. Set an expiry date (e.g., 1 hour from now)
-        const passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour
+        // 1. Generate a 6-digit code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // 4. Update the admin record
+        // 2. Set an expiry date (e.g., 10 minutes from now)
+        const verificationCodeExpires = new Date(Date.now() + 600000); // 10 minutes
+
+        // 3. Update the admin record with the code and expiry
         await prisma.admin.update({
-            where: { username: admin.username },
-            data: { passwordResetToken, passwordResetExpires }
+            where: { email: admin.email },
+            data: { verificationCode, verificationCodeExpires }
         });
 
-        // 5. Send the token back to the user (simulating an email)
-        // In a real app, you would use a service like Nodemailer to email this link:
-        // const resetUrl = `http://your-frontend.com/reset-password/${resetToken}`;
-        // sendEmail({ to: admin.email, subject: 'Password Reset', text: `Reset your password here: ${resetUrl}` });
-        
-        res.status(200).json({ 
-            message: 'Password reset token generated. This would normally be emailed to the user.',
-            resetToken: resetToken // Return the unhashed token for testing
+        // 4. Email the code to the user
+        const emailHtml = `<p>Your password reset code is: <b>${verificationCode}</b></p><p>This code will expire in 10 minutes.</p>`;
+        await sendEmail({
+            to: admin.email,
+            subject: 'Your Password Reset Code',
+            text: `Your password reset code is: ${verificationCode}`,
+            html: emailHtml
         });
+
+        res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
 
     } catch (error) {
-        res.status(500).json({ message: 'Error processing forgot password request', error: error.message });
+        res.status(500).json({ message: 'Error sending verification code', error: error.message });
     }
   },
 
-  // --- NEW FUNCTION: Reset Password ---
+  // --- NEW: Step 2 of Password Reset ---
+  // RENAMED from resetPasswordWithCode to resetPassword to match auth.routes.js
   resetPassword: async (req, res) => {
     try {
-        // 1. Hash the incoming token from the URL params
-        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+        const { email, code, password } = req.body;
+        if (!email || !code || !password) {
+            return res.status(400).json({ message: 'Email, verification code, and new password are required.' });
+        }
 
-        // 2. Find the user by the hashed token and check if it's still valid
+        // 1. Find the user by email, code, and check if the code is still valid
         const admin = await prisma.admin.findFirst({
             where: {
-                passwordResetToken: hashedToken,
-                passwordResetExpires: { gt: new Date() } // 'gt' means "greater than" (i.e., not expired)
+                email,
+                verificationCode: code,
+                verificationCodeExpires: { gt: new Date() } // 'gt' means "greater than" (i.e., not expired)
             }
         });
 
         if (!admin) {
-            return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+            return res.status(400).json({ message: 'Verification code is invalid or has expired.' });
         }
 
-        // 3. If the token is valid, update the password
-        const { password } = req.body;
-        if (!password) {
-            return res.status(400).json({ message: 'New password is required.' });
-        }
-
+        // 2. If the code is valid, update the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await prisma.admin.update({
             where: { id: admin.id },
             data: {
                 password: hashedPassword,
-                // Clear the reset token fields after successful reset
-                passwordResetToken: null,
-                passwordResetExpires: null
+                // Clear the verification code fields after successful reset
+                verificationCode: null,
+                verificationCodeExpires: null
             }
         });
 

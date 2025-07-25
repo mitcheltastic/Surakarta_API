@@ -10,7 +10,8 @@ router.get('/me', authenticateToken, authController.getMe); //who am I
 
 // --- NEW ROUTES ---
 router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password/:token', authController.resetPassword);
+// Corrected: Removed ':token' from the route path as the code is sent in the body
+router.post('/reset-password', authController.resetPassword);
 
 
 module.exports = router;
