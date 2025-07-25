@@ -53,12 +53,10 @@ const authController = {
   },
 
   // --- NEW: Step 1 of Password Reset ---
-  // RENAMED from sendResetCode to forgotPassword to match auth.routes.js
   forgotPassword: async (req, res) => {
     try {
         const { email } = req.body;
 
-        // Added validation for email presence
         if (!email) {
             return res.status(400).json({ message: 'Email is required for password reset.' });
         }
@@ -66,40 +64,58 @@ const authController = {
         const admin = await prisma.admin.findUnique({ where: { email } });
 
         if (!admin) {
-            // Security: Don't reveal if an email is registered or not.
             return res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
         }
 
-        // 1. Generate a 6-digit code
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // 2. Set an expiry date (e.g., 10 minutes from now)
         const verificationCodeExpires = new Date(Date.now() + 600000); // 10 minutes
 
-        // 3. Update the admin record with the code and expiry
         await prisma.admin.update({
             where: { email: admin.email },
             data: { verificationCode, verificationCodeExpires }
         });
 
-        // 4. Email the code to the user
-        const emailHtml = `<p>Your password reset code is: <b>${verificationCode}</b></p><p>This code will expire in 10 minutes.</p>`;
+        // --- EDITED: More beautiful email HTML template ---
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #4CAF50; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">Village Admin System</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Hello ${admin.username || 'Admin'},</p>
+                    <p>You have requested to reset your password for the Village Admin System.</p>
+                    <p>Your password reset verification code is:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <span style="display: inline-block; background-color: #f0f0f0; padding: 15px 25px; border-radius: 5px; font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px;">
+                            ${verificationCode}
+                        </span>
+                    </div>
+                    <p>This code is valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
+                    <p>To complete the reset process, please enter this code on the password reset page.</p>
+                </div>
+                <div style="background-color: #f8f8f8; padding: 20px; text-align: center; font-size: 12px; color: #777;">
+                    <p>&copy; ${new Date().getFullYear()} Village Admin System. All rights reserved.</p>
+                </div>
+            </div>
+        `;
+        // --- END EDITED ---
+
         await sendEmail({
             to: admin.email,
-            subject: 'Your Password Reset Code',
-            text: `Your password reset code is: ${verificationCode}`,
+            subject: 'Your Password Reset Code - Village Admin System', // Enhanced subject
+            text: `Your password reset code is: ${verificationCode}. This code will expire in 10 minutes.`,
             html: emailHtml
         });
 
         res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
 
     } catch (error) {
+        console.error("Error in forgotPassword:", error); // More specific error logging
         res.status(500).json({ message: 'Error sending verification code', error: error.message });
     }
   },
 
   // --- NEW: Step 2 of Password Reset ---
-  // RENAMED from resetPasswordWithCode to resetPassword to match auth.routes.js
   resetPassword: async (req, res) => {
     try {
         const { email, code, password } = req.body;
@@ -107,12 +123,11 @@ const authController = {
             return res.status(400).json({ message: 'Email, verification code, and new password are required.' });
         }
 
-        // 1. Find the user by email, code, and check if the code is still valid
         const admin = await prisma.admin.findFirst({
             where: {
                 email,
                 verificationCode: code,
-                verificationCodeExpires: { gt: new Date() } // 'gt' means "greater than" (i.e., not expired)
+                verificationCodeExpires: { gt: new Date() }
             }
         });
 
@@ -120,14 +135,12 @@ const authController = {
             return res.status(400).json({ message: 'Verification code is invalid or has expired.' });
         }
 
-        // 2. If the code is valid, update the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await prisma.admin.update({
             where: { id: admin.id },
             data: {
                 password: hashedPassword,
-                // Clear the verification code fields after successful reset
                 verificationCode: null,
                 verificationCodeExpires: null
             }
@@ -136,6 +149,7 @@ const authController = {
         res.status(200).json({ message: 'Password has been reset successfully.' });
 
     } catch (error) {
+        console.error("Error in resetPassword:", error); // More specific error logging
         res.status(500).json({ message: 'Error resetting password', error: error.message });
     }
   }
