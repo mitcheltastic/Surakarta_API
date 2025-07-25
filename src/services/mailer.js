@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async ({ to, subject, text, html }) => {
     try {
         const info = await transporter.sendMail({
-            from: `"Village Admin System" <${process.env.GMAIL_ADDRESS}>`, // Also using env variable here
+            from: `"Desa Surakarta" <${process.env.GMAIL_ADDRESS}>`, // Also using env variable here
             to,
             subject,
             text,
