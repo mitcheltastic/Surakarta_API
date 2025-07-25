@@ -42,11 +42,17 @@ For endpoints that accept images, the request `Content-Type` must be **`multipar
 
 | Method | Endpoint | Description | Auth | Request Body (JSON) |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/register` | Creates a new admin user. | **Admin Only** | `{ "username": "...", "password": "..." }` |
+| `POST` | `/register` | Creates a new admin user. | **Admin Only** | `{ "username": "...", "email": "...", "password": "..." }` |
 | `POST` | `/login` | Logs in an admin and returns a 7-day JWT token. | Public | `{ "username": "...", "password": "..." }` |
-| `GET`  | `/me` | Checks the validity of the current token. | Public | `{ "username": "...", "password": "..." }` |
-| `POST` | `/forgot-password` | Starts the password reset process. | Public | `{ "username": "admin_username" }` |
-| `POST` | `/reset-password/:token` | Finalizes the password reset. | Public | `{ "password": "new_password" }` |
+| `GET` | `/me` | Checks the validity of the current token. | **Admin Only** | (None) |
+| `POST` | `/forgot-password` | Starts the password reset process. | Public | `{ "email": "admin_email@example.com" }` |
+| `POST` | `/reset-password` | Finalizes the password reset. | Public | `{ "email": "...", "code": "...", "password": "..." }` |
+
+**Note on Authentication Endpoints:**
+* The `POST /register` endpoint is marked as **Admin Only**. This implies that an existing authenticated admin is required to create new admin users.
+* The `GET /me` endpoint is marked as **Public** in your documentation but **Admin Only** in your `auth.routes.js`. For consistency with your code, it has been listed as **Admin Only** here.
+* The `POST /forgot-password` endpoint's request body should be `email`, not `username`, as per our recent debugging.
+* The `POST /reset-password` endpoint's request body requires `email`, `code`, and `password` as per our recent discussions and your controller logic. The `:token` has been removed from the endpoint in the table to reflect the updated route.
 
 ### News, Announcements, & Agendas (`/api/posts`)
 
