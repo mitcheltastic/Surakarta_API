@@ -44,6 +44,7 @@ For endpoints that accept images, the request `Content-Type` must be **`multipar
 | :--- | :--- | :--- | :--- | :--- |
 | `POST` | `/register` | Creates a new admin user. | **Admin Only** | `{ "username": "...", "password": "..." }` |
 | `POST` | `/login` | Logs in an admin and returns a 7-day JWT token. | Public | `{ "username": "...", "password": "..." }` |
+| `GET`  | `/me` | Checks the validity of the current token. | Public | `{ "username": "...", "password": "..." }` |
 | `POST` | `/forgot-password` | Starts the password reset process. | Public | `{ "username": "admin_username" }` |
 | `POST` | `/reset-password/:token` | Finalizes the password reset. | Public | `{ "password": "new_password" }` |
 
