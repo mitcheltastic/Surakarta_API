@@ -55,63 +55,63 @@ const authController = {
   // --- NEW: Step 1 of Password Reset ---
   forgotPassword: async (req, res) => {
     try {
-        const { email } = req.body;
+      const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ message: 'Email is required for password reset.' });
-        }
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required for password reset.' });
+      }
 
-        const admin = await prisma.admin.findUnique({ where: { email } });
+      const admin = await prisma.admin.findUnique({ where: { email } });
 
-        if (!admin) {
-            return res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
-        }
+      if (!admin) {
+        return res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
+      }
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const verificationCodeExpires = new Date(Date.now() + 600000); // 10 minutes
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationCodeExpires = new Date(Date.now() + 600000); // 10 minutes
 
-        await prisma.admin.update({
-            where: { email: admin.email },
-            data: { verificationCode, verificationCodeExpires }
-        });
+      await prisma.admin.update({
+        where: { email: admin.email },
+        data: { verificationCode, verificationCodeExpires }
+      });
 
-        // --- EDITED: More beautiful email HTML template ---
-        const emailHtml = `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #4CAF50; color: white; padding: 20px; text-align: center;">
-                    <h2 style="margin: 0;">Village Admin System</h2>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Hello ${admin.username || 'Admin'},</p>
-                    <p>You have requested to reset your password for the Village Admin System.</p>
-                    <p>Your password reset verification code is:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <span style="display: inline-block; background-color: #f0f0f0; padding: 15px 25px; border-radius: 5px; font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px;">
-                            ${verificationCode}
-                        </span>
-                    </div>
-                    <p>This code is valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
-                    <p>To complete the reset process, please enter this code on the password reset page.</p>
-                </div>
-                <div style="background-color: #f8f8f8; padding: 20px; text-align: center; font-size: 12px; color: #777;">
-                    <p>&copy; ${new Date().getFullYear()} Village Admin System. All rights reserved.</p>
-                </div>
-            </div>
-        `;
-        // --- END EDITED ---
+      // --- EDITED: More beautiful email HTML template matching frontend ---
+      const emailHtml = `
+              <div style="font-family: 'Open Sans', 'Lato', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; background-color: #f8f8f8; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                  <div style="background-color: #8B4513; color: white; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                      <h2 style="margin: 0; font-size: 28px;">Village Admin System</h2>
+                  </div>
+                  <div style="padding: 30px 20px;">
+                      <p style="font-size: 16px; margin-bottom: 15px;">Hello ${admin.username || 'Admin'},</p>
+                      <p style="font-size: 16px; margin-bottom: 20px;">You have requested to reset your password for the Desa Surakarta Administrator System.</p>
+                      <p style="font-size: 16px; margin-bottom: 10px;">Your password reset verification code is:</p>
+                      <div style="text-align: center; margin: 30px 0;">
+                          <span style="display: inline-block; background-color: #FFD700; padding: 18px 30px; border-radius: 5px; font-size: 32px; font-weight: bold; color: #333; letter-spacing: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                              ${verificationCode}
+                          </span>
+                      </div>
+                      <p style="font-size: 14px; color: #555; margin-top: 20px;">This code is valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
+                      <p style="font-size: 14px; color: #555;">To complete the reset process, please enter this code on the password reset page.</p>
+                  </div>
+                  <div style="background-color: #eee; padding: 15px 20px; text-align: center; font-size: 12px; color: #777; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Village Admin System. All rights reserved.</p>
+                  </div>
+              </div>
+          `;
+      // --- END EDITED ---
 
-        await sendEmail({
-            to: admin.email,
-            subject: 'Your Password Reset Code - Village Admin System', // Enhanced subject
-            text: `Your password reset code is: ${verificationCode}. This code will expire in 10 minutes.`,
-            html: emailHtml
-        });
+      await sendEmail({
+        to: admin.email,
+        subject: 'Your Password Reset Code - Desa Surakarta Admin System', // Enhanced subject
+        text: `Your password reset code is: ${verificationCode}. This code will expire in 10 minutes.`,
+        html: emailHtml
+      });
 
-        res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
+      res.status(200).json({ message: 'If an account with that email exists, a verification code has been sent.' });
 
     } catch (error) {
-        console.error("Error in forgotPassword:", error); // More specific error logging
-        res.status(500).json({ message: 'Error sending verification code', error: error.message });
+      console.error("Error in forgotPassword:", error); // More specific error logging
+      res.status(500).json({ message: 'Error sending verification code', error: error.message });
     }
   },
 
