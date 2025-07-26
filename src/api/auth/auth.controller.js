@@ -79,7 +79,7 @@ const authController = {
       const emailHtml = `
               <div style="font-family: 'Open Sans', 'Lato', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; background-color: #f8f8f8; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                   <div style="background-color: #8B4513; color: white; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                      <h2 style="margin: 0; font-size: 28px;">Village Admin System</h2>
+                      <h2 style="margin: 0; font-size: 28px;">Desa Surakarta</h2>
                   </div>
                   <div style="padding: 30px 20px;">
                       <p style="font-size: 16px; margin-bottom: 15px;">Hello ${admin.username || 'Admin'},</p>
@@ -94,7 +94,7 @@ const authController = {
                       <p style="font-size: 14px; color: #555;">To complete the reset process, please enter this code on the password reset page.</p>
                   </div>
                   <div style="background-color: #eee; padding: 15px 20px; text-align: center; font-size: 12px; color: #777; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
-                      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Village Admin System. All rights reserved.</p>
+                      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Desa Surakarta. All rights reserved.</p>
                   </div>
               </div>
           `;
