@@ -1,6 +1,6 @@
 # Village Website API Documentation
 
-This document provides all necessary information for the frontend team to interact with the Village Website backend API.
+This document provides all necessary information for the frontend team to interact with the Village Website backend API...
 
 **Base URL**: All API endpoints are relative to the following base URL:
 `http://localhost:3000` (or the production server URL once deployed).
