@@ -4,8 +4,9 @@ const authenticateToken = require('../../middlewares/auth.middleware');
 
 // Note: In a real-world scenario, you might want to protect the register route
 // so that only an existing admin can create a new one.
-router.post('/register', authController.register);
+router.post('/register', authenticateToken, authController.register);
 router.post('/login', authController.login);
+router.get('/logout', authenticateToken, authController.logout);
 router.get('/me', authenticateToken, authController.getMe); //who am I
 
 // --- NEW ROUTES ---
