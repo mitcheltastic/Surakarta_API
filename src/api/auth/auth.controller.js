@@ -48,19 +48,6 @@ const authController = {
     }
   },
 
-  logout: async (req, res) => {
-    try {
-      // In a stateless JWT system, the server's job is done.
-      // The client's action of deleting the token is the true logout.
-      res.status(200).json({
-        message: 'Logout successful'
-      });
-    } catch (error) {
-      // This is a failsafe, but shouldn't be hit with this simple logic.
-      res.status(500).json({ message: 'Error during logout', error: error.message });
-    }
-  },
-
   getMe: async (req, res) => {
     res.status(200).json(req.user);
   },
